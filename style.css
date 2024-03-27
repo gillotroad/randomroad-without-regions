@@ -25,7 +25,7 @@ body {
   display: none !important;
 }
 
-.controlUI {
+.defaultControlUI {
     background-color: #fff;
     border: 2px solid #fff;
     border-radius: 3px;
