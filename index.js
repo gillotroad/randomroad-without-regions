@@ -16,7 +16,7 @@ https://gillotroad.github.io/lockedstreetview/?lat=38.721172&long=-106.7827289
 
 */
 
-var marker, startTime, path, panorama, startLoc, currentLatLong;
+var marker, startTime, path, panorama, startLoc, currentLatLong, controlUI;
 
 
 function initPano() {
