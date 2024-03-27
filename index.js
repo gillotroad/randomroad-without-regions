@@ -62,7 +62,7 @@ window.initPano = initPano;
 
 function newSpot() 
 {
-    timeStart = new Date().getTime();
+    startTime = new Date().getTime();
     try {
         marker.setMap(null);
         marker = null;
