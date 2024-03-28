@@ -17,8 +17,8 @@ Version:
 
 */
 
-var startTime, path, panorama, startLoc, currentLatLong, controlUI;
-let map, marker;
+var startTime, path, panorama, startLoc, currentLatLong, tempControlUI;
+let map, guessMarker, targetMarker, targetPath, replyText;
 
 
 function initPano() {
@@ -62,11 +62,21 @@ function initPano() {
   
   //Create "New Game" control button in top right corner of panorama
   var newGameControlDiv = document.createElement("div");
-  controlUI = createControl(newGameControlDiv, "Starts a New Game Session", "New Game");
-  controlUI.addEventListener("click", () => {
+  tempControlUI = createControl(newGameControlDiv, "Starts a New Game Session", "New Game", "5px", "25px");
+  tempControlUI.addEventListener("click", () => {
   		newSpot();
   });
   panorama.controls[google.maps.ControlPosition.TOP_RIGHT].push(newGameControlDiv);
+  
+  //
+  //Create "Submit" control button in top left corner of map
+  var submitControlDiv = document.createElement("div");
+  tempControlUI = createControl(submitControlDiv, "Submit", "Submit", "3px", "12px");
+  tempControlUI.addEventListener("click", () => {
+  		submitGuess();
+  });
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(submitControlDiv);
+  //
   
   //
   
@@ -75,7 +85,7 @@ function initPano() {
   
   
   //Create marker for guessing
-  marker = new google.maps.Marker ({
+  guessMarker = new google.maps.Marker ({
   	map: map,
 	position: {lat: 0, lng: 0},
 	title: "My guess",
@@ -105,10 +115,10 @@ function newSpot()
 {
     startTime = new Date().getTime();
     try {
-        //marker2.setMap(null);
-        //marker2 = null;
-        path.setMap(null);
-        path = null;
+        targetMarker.setMap(null);
+        targetMarker = null;
+        targetPath.setMap(null);
+        targetPath = null;
         
     }
     catch(err) {}
@@ -135,12 +145,12 @@ function getRandomLatLng(max)
     return num;
 }
 
-function createControl(controlDiv, desc, content) 
+function createControl(controlDiv, desc, content, bSize, fSize) 
 {
     // Set CSS for the control border.
     const controlUI = document.createElement("div");
     controlUI.style.backgroundColor = "#fff";
-    controlUI.style.border = "5px solid #fff";
+    controlUI.style.border = bSize + " solid #fff";
     controlUI.style.borderRadius = "3px";
     controlUI.style.boxShadow = "0 2px 6px rgba(0,0,0,.3)";
     controlUI.style.cursor = "pointer";
@@ -152,7 +162,7 @@ function createControl(controlDiv, desc, content)
     const controlText = document.createElement("div");
     controlText.style.color = "rgb(25,25,25)";
     controlText.style.fontFamily = "Comic Sans MS,Arial,sans-serif";
-    controlText.style.fontSize = "25px";
+    controlText.style.fontSize = fSize;
     controlText.style.lineHeight = "20px";
     controlText.style.paddingLeft = "5px";
     controlText.style.paddingRight = "5px";
@@ -163,5 +173,89 @@ function createControl(controlDiv, desc, content)
 
 function moveMarker(pnt) 
 {
-    marker.setPosition(pnt);
+    guessMarker.setPosition(pnt);
+}
+
+function submitGuess()
+{
+	var gameDuration = formatTime((new Date().getTime() - startTime) / 1000);
+    //var latPan = panorama.getPosition().lat();
+    //var lngPan = panorama.getPosition().lng();
+    //var latGuessMarker = guessMarker.getPosition().lat();
+    //var lngGuessMarker = guessMarker.getPosition().lng();
+	var panPosition = panorama.getPosition();
+	var guessMarkerPosition = guessMarker.getPosition();
+	
+	try {
+        targetMarker.setMap(null);
+        targetMarker = null;
+        targetPath.setMap(null);
+        targetPath = null;
+    }
+    catch (err) {
+	
+	}
+	finally {
+		var distanceText = "";
+		var distanceToTarget = google.maps.geometry.spherical.computeDistanceBetween(
+    		panPosition,
+    		guessMarkerPosition
+		);
+		
+		if (distanceToTarget < 1000) {
+			distanceText = distanceToTarget.toFixed(2) + " m";
+		}
+		else {
+			distanceText = (distanceToTarget/1000).toFixed(3) + " km";
+		}
+		
+		replyText = '<div id="result">'+'<b>Result:</b><br>Distance: '  + distanceText + "  <br>" + 'Time: ' + gameDuration + "</div>";
+		console.log(replyText);
+		
+		targetMarker = new google.maps.Marker ({
+  			map: map,
+			position: panPosition,
+			draggable: false,
+			title: "Target",
+  		});
+		
+		var pathCoordinates = [
+            targetMarker.getPosition(),
+            guessMarker.getPosition()
+        ];
+		
+		targetPath = new google.maps.Polyline({
+        	path: pathCoordinates,
+            geodesic: true,
+            strokecolor: '#FF0000',
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+        });
+		
+		targetPath.setMap(map);
+		
+		
+        displayPopup(replyText, map, targetMarker);
+		
+		
+	}
+}
+
+function formatTime(seconds) {
+    var timeString;
+    if (seconds < 60) 
+        timeString = seconds.toFixed(2) + " s"
+    else if (seconds < 3600)
+        timeString = Math.floor(seconds/60) +  " m " + (seconds%60).toFixed(2) + " s";
+    else
+        timeString = Math.floor(seconds/3600) +  " h" + (seconds%3600).toFixed(2) + " m" + ((seconds%3600)%60).toFixed(2) + " s";
+    return timeString
+}
+
+function displayPopup(contentString, map, marker)
+{
+        var infoWindow = new google.maps.InfoWindow({
+            content: contentString,
+        });
+    infoWindow.open(map, marker);
 }
