@@ -11,10 +11,14 @@ Description:
 Manual:
 
 
+Version:
+28.03.24
+12:23
+
 */
 
-var marker, startTime, path, panorama, startLoc, currentLatLong, controlUI;
-let map;
+var startTime, path, panorama, startLoc, currentLatLong, controlUI;
+let map, marker;
 
 
 function initPano() {
@@ -70,16 +74,18 @@ function initPano() {
   
   
   
-  marker = new google.maps.Marker.AdvancedMarkerElement  ({
-  	map,
-	draggable:true,
+  //Create marker for guessing
+  marker = new google.maps.Marker ({
+  	map: map,
 	position: {lat: 0, lng: 0},
-    //title:"My Guess",
+	title: "My guess",
   });
   
   map.addListener('click', function(event) {
   	moveMarker(event.latLng);
   });
+  
+
   
   
   /*
@@ -99,8 +105,8 @@ function newSpot()
 {
     startTime = new Date().getTime();
     try {
-        marker.setMap(null);
-        marker = null;
+        //marker2.setMap(null);
+        //marker2 = null;
         path.setMap(null);
         path = null;
         
