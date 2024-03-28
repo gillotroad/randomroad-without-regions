@@ -6,28 +6,42 @@
 
 /*
 Description:
-Opens Google Street View at desired location using latitude and longitude parameters.
-The Street View will have limited commands, specifically not showing links to the original Google Maps page.
+
 
 Manual:
-Call website passing arguments "lat" and "long" copied from Google Street View adress line.
-Example:
-https://gillotroad.github.io/lockedstreetview/?lat=38.721172&long=-106.7827289
+
 
 */
 
 var marker, startTime, path, panorama, startLoc, currentLatLong, controlUI;
+let map;
 
 
 function initPano() {
   const zeroPosition = { lat: 0, lng: 0 };
-  // Note: constructed panorama objects have visible: true
-  // set by default.
-  //
+
   
   newSpot();
   
-
+  //
+  
+  map = new google.maps.Map(document.getElementById("map"), {
+  	center: zeroPosition,
+    zoom: 1,
+    mapTypeControlOptions: {
+    	mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain']
+    },
+    disableDefaultUI: true
+  });
+  
+  
+  //
+  
+  
+  // Note: constructed panorama objects have visible: true
+  // set by default.
+  
+  //
   panorama = new google.maps.StreetViewPanorama(
     document.getElementById("pano"),
     {
@@ -40,6 +54,8 @@ function initPano() {
     },
   );
   
+  
+  
   //Create "New Game" control button in top right corner of panorama
   var newGameControlDiv = document.createElement("div");
   controlUI = createControl(newGameControlDiv, "Starts a New Game Session", "New Game");
@@ -48,7 +64,9 @@ function initPano() {
   });
   panorama.controls[google.maps.ControlPosition.TOP_RIGHT].push(newGameControlDiv);
   
+  //
   
+  map.setStreetView(panorama);
   
   currentLatLong = panorama.getPosition();
   console.log("lat = ");
