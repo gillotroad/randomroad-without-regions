@@ -22,9 +22,12 @@
     z-index: 1;
 }
 
-#gameContainer {
-    margin-left: 2%;
+#map:hover {
+    height: 50%;
+    width: 40%;
+    opacity: 1.0;
 }
+
 
 /* 
  * Optional: Makes the sample page fill the window. 
