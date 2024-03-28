@@ -68,11 +68,28 @@ function initPano() {
   
   map.setStreetView(panorama);
   
+  
+  
+  marker = new google.maps.Marker.AdvancedMarkerElement  ({
+  	map,
+	draggable:true,
+	position: {lat: 0, lng: 0},
+    //title:"My Guess",
+  });
+  
+  map.addListener('click', function(event) {
+  	moveMarker(event.latLng);
+  });
+  
+  
+  /*
   currentLatLong = panorama.getPosition();
   console.log("lat = ");
   console.log(currentLatLong.lat);
   console.log("long = ");
   console.log(currentLatLong.long);
+  */
+  
 }
 
 
@@ -136,4 +153,9 @@ function createControl(controlDiv, desc, content)
     controlText.innerHTML = content;
     controlUI.appendChild(controlText);
     return controlUI;
+}
+
+function moveMarker(pnt) 
+{
+    marker.setPosition(pnt);
 }
