@@ -21,7 +21,11 @@ var startTime, path, panorama, startLoc, currentLatLong, tempControlUI;
 let map, guessMarker, targetMarker, targetPath, replyText;
 
 
-function initPano() {
+async function initPano() {
+  const { Map } = await google.maps.importLibrary("maps");
+  const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+  const { Geometry } = await google.maps.importLibrary("geometry");
+
   const zeroPosition = { lat: 0, lng: 0 };
 
   
@@ -29,18 +33,18 @@ function initPano() {
   
   //
   
-  map = new google.maps.Map(document.getElementById("map"), {
+  map = new Map(document.getElementById("map"), {
   	center: zeroPosition,
     zoom: 1,
     mapTypeControlOptions: {
     	mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain']
     },
-    disableDefaultUI: true
+    disableDefaultUI: true,
+	mapId: "f0133ed91e943e1c",
   });
   
   
   //
-  
   
   // Note: constructed panorama objects have visible: true
   // set by default.
@@ -82,22 +86,28 @@ function initPano() {
   
   map.setStreetView(panorama);
   
-  
-  
   //Create marker for guessing
+  guessMarker = new AdvancedMarkerElement({
+    map: map,
+    position: { lat: 0, lng: 0 },
+	title: "My guess",
+  });
+  
+  /*
+  //legacy marker (old version)
   guessMarker = new google.maps.Marker ({
   	map: map,
 	position: {lat: 0, lng: 0},
 	title: "My guess",
   });
+  */
   
   map.addListener('click', function(event) {
   	moveMarker(event.latLng);
   });
   
 
-  
-  
+    
   /*
   currentLatLong = panorama.getPosition();
   console.log("lat = ");
@@ -109,7 +119,9 @@ function initPano() {
 }
 
 
-window.initPano = initPano;
+//window.initPano = initPano;
+
+initPano();
 
 function newSpot() 
 {
@@ -173,18 +185,20 @@ function createControl(controlDiv, desc, content, bSize, fSize)
 
 function moveMarker(pnt) 
 {
-    guessMarker.setPosition(pnt);
+    guessMarker.position = pnt;
 }
 
-function submitGuess()
+async function submitGuess()
 {
+	const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+	
 	var gameDuration = formatTime((new Date().getTime() - startTime) / 1000);
     //var latPan = panorama.getPosition().lat();
     //var lngPan = panorama.getPosition().lng();
     //var latGuessMarker = guessMarker.getPosition().lat();
     //var lngGuessMarker = guessMarker.getPosition().lng();
 	var panPosition = panorama.getPosition();
-	var guessMarkerPosition = guessMarker.getPosition();
+	var guessMarkerPosition = guessMarker.position;
 	
 	try {
         targetMarker.setMap(null);
@@ -212,7 +226,7 @@ function submitGuess()
 		replyText = '<div id="result">'+'<b>Result:</b><br>Distance: '  + distanceText + "  <br>" + 'Time: ' + gameDuration + "</div>";
 		console.log(replyText);
 		
-		targetMarker = new google.maps.Marker ({
+		targetMarker = new AdvancedMarkerElement ({
   			map: map,
 			position: panPosition,
 			draggable: false,
@@ -220,8 +234,8 @@ function submitGuess()
   		});
 		
 		var pathCoordinates = [
-            targetMarker.getPosition(),
-            guessMarker.getPosition()
+            targetMarker.position,
+            guessMarker.position
         ];
 		
 		targetPath = new google.maps.Polyline({
