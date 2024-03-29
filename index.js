@@ -13,7 +13,7 @@ Manual:
 
 Version:
 29.03.24
-20:52
+20:59
 
 */
 
@@ -127,8 +127,9 @@ async function newSpot()
   			moveMarker(event.latLng);
   		});
 		
-		//center map at {lat: 0, lng: 0}
+		//center map at {lat: 0, lng: 0} and reset zoom to 1
 		map.setCenter(zeroPosition);
+		map.setZoom(1);
 		
 		//reset guessMarker position to {lat: 0, lng: 0}
 		guessMarker.position = zeroPosition;
