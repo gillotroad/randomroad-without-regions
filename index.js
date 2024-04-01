@@ -17,8 +17,11 @@ Version:
 
 */
 
-var startTime, path, panorama, startLoc, currentLatLong, tempControlUI, mapClickListener;
+var startTime, path, panorama, startLoc, currentLatLong, tempControlUI, mapClickListener, secondsGameDuration, gameDurationText;
 let map, guessMarker, targetMarker, targetPath, replyText;
+var hasSubmitted = Boolean(false);
+var pointsAchieved = +0;
+var distanceToTarget;
 
 const zeroPosition = { lat: 0, lng: 0 };
 
@@ -145,6 +148,8 @@ async function newSpot()
         var sv = new google.maps.StreetViewService();
         sv.getPanorama({location: {lat: getRandomLatLng(90), lng: getRandomLatLng(180)}, preference: 'best', radius: 100000, source: 'outdoor'}, processSVData);
         
+		//Set hasSubmitted = false to verify that the Submit button has not been clicked during current game instance
+		hasSubmitted = false;
     }
 }
 
@@ -200,9 +205,14 @@ async function submitGuess()
 {
 	const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
 	
-	var gameDuration = formatTime((new Date().getTime() - startTime) / 1000);
+	//var gameDurationText = formatTime((new Date().getTime() - startTime) / 1000);
 	var panPosition = panorama.getPosition();
 	var guessMarkerPosition = guessMarker.position;
+	
+	if (hasSubmitted === false) {
+		secondsGameDuration = (new Date().getTime() - startTime) / 1000;
+		gameDurationText = formatTime(secondsGameDuration);
+	}
 	
 	try {
 		//Remove click listener so that guessMarker cannot be moved until new game starts
@@ -219,10 +229,17 @@ async function submitGuess()
 	}
 	finally {
 		var distanceText = "";
-		var distanceToTarget = google.maps.geometry.spherical.computeDistanceBetween(
-    		panPosition,
-    		guessMarkerPosition
-		);
+		
+		//If Submit button has been clicked for the first time during current game instance, calculate distanceToTarget and pointsAchieved
+		if (hasSubmitted === false) {
+			distanceToTarget = google.maps.geometry.spherical.computeDistanceBetween(
+    			panPosition,
+    			guessMarkerPosition
+			);
+			
+			pointsAchieved = calculatePoints(distanceToTarget, secondsGameDuration);
+		}
+				
 		
 		if (distanceToTarget < 1000) {
 			distanceText = distanceToTarget.toFixed(2) + " m";
@@ -230,8 +247,9 @@ async function submitGuess()
 		else {
 			distanceText = (distanceToTarget/1000).toFixed(3) + " km";
 		}
+				
 		
-		replyText = '<div id="result">'+'<b>Result:</b><br>Distance: '  + distanceText + "  <br>" + 'Time: ' + gameDuration + "</div>";
+		replyText = '<div id="result">'+'<b>Result:</b><br>Distance: '  + distanceText + '<br>' + 'Time: ' + gameDurationText + '<br><b style="color: #127FEC">Points: ' + pointsAchieved + '</b></div>';
 		
 		
 		//Create PinElement for targetMarker
@@ -271,6 +289,9 @@ async function submitGuess()
 		//Show result popup
         displayPopup(replyText, map, targetMarker);
 		
+		//Set hasSubmitted = true, to see if the Submit button has been clicked before during current game instance
+		hasSubmitted = true;
+		
 	}
 }
 
@@ -291,4 +312,36 @@ function displayPopup(contentString, map, marker)
             content: contentString,
         });
     infoWindow.open(map, marker);
+}
+
+function calculatePoints(iDistance, iTime) {
+	var maxPoints = 1000;
+	
+	return (1000 * (1 - distMultiplier(iDistance)) * (1 - timeMultiplier(iTime))).toFixed(0);
+}
+
+function distMultiplier(iDistance) {
+	var minProximity = 70;
+	var maxDistance = 10000000;
+	
+	if (iDistance <= minProximity) {
+		return 0;
+	} else if (iDistance > maxDistance) {
+		return 1;
+	} else {
+		return (1/(maxDistance - minProximity)) * (iDistance - minProximity);
+	}
+}
+
+function timeMultiplier(iTime) {
+	var minQuickness = 30;
+	var maxTime = 1800;
+	
+	if (iTime <= minQuickness) {
+		return 0;
+	} else if (iTime > maxTime) {
+		return 1;
+	} else {
+		return (1/(maxTime - minQuickness)) * (iTime - minQuickness);
+	}
 }
