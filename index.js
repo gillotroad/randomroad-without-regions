@@ -22,6 +22,7 @@ let map, guessMarker, targetMarker, targetPath, replyText;
 var hasSubmitted = Boolean(false);
 var pointsAchieved = +0;
 var distanceToTarget;
+var maxPoints = 1000;
 
 const zeroPosition = { lat: 0, lng: 0 };
 
@@ -247,9 +248,17 @@ async function submitGuess()
 		else {
 			distanceText = (distanceToTarget/1000).toFixed(3) + " km";
 		}
+		
+		if (pointsAchieved < 500) {
+			var colourPointsText = "#E00D0D";
+		} else if (pointsAchieved < 900) {
+			var colourPointsText = "#E8AF09";
+		} else {
+			var colourPointsText = "#2DDF09";
+		}
 				
 		
-		replyText = '<div id="result">'+'<b>Result:</b><br>Distance: '  + distanceText + '<br>' + 'Time: ' + gameDurationText + '<br><b style="color: #127FEC">Points: ' + pointsAchieved + '</b></div>';
+		replyText = '<div id="result">'+'<b>Result:</b><br>Distance: '  + distanceText + '<br>' + 'Time: ' + gameDurationText + '<br><b style="color: ' + colourPointsText + '">Points: ' + pointsAchieved + ' / ' + maxPoints + '</b></div>';
 		
 		
 		//Create PinElement for targetMarker
@@ -314,15 +323,17 @@ function displayPopup(contentString, map, marker)
     infoWindow.open(map, marker);
 }
 
-function calculatePoints(iDistance, iTime) {
-	var maxPoints = 1000;
-	
-	return (1000 * (1 - distMultiplier(iDistance)) * (1 - timeMultiplier(iTime))).toFixed(0);
+function calculatePoints(iDistance, iTime) {	
+	if ((iDistance <= 70) & (iTime <= 30)) {
+		return maxPoints;
+	} else {
+		return (1000 * (1 - distMultiplier(iDistance)) * (1 - timeMultiplier(iTime))).toFixed(0);
+	}
 }
 
 function distMultiplier(iDistance) {
 	var minProximity = 70;
-	var maxDistance = 10000000;
+	var maxDistance = 8000000;
 	
 	if (iDistance <= minProximity) {
 		return 0;
@@ -334,14 +345,18 @@ function distMultiplier(iDistance) {
 }
 
 function timeMultiplier(iTime) {
-	var minQuickness = 30;
+	var minQuickness = 5;
 	var maxTime = 1800;
 	
 	if (iTime <= minQuickness) {
 		return 0;
-	} else if (iTime > maxTime) {
+	} else if (iTime >= maxTime) {
 		return 1;
 	} else {
-		return (1/(maxTime - minQuickness)) * (iTime - minQuickness);
+		//Linear function
+		//return (1/(maxTime - minQuickness)) * (iTime - minQuickness);
+		
+		//Geometric function
+		return ((iTime - minQuickness) / (maxTime - minQuickness)) ** (1/3);
 	}
 }
