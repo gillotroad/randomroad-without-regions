@@ -250,10 +250,13 @@ async function submitGuess()
 		}
 		
 		if (pointsAchieved < 500) {
+			//Red text for points
 			var colourPointsText = "#E00D0D";
-		} else if (pointsAchieved < 900) {
+		} else if (pointsAchieved < 850) {
+			//Orange text for points
 			var colourPointsText = "#E8AF09";
 		} else {
+			//Green text for points
 			var colourPointsText = "#2DDF09";
 		}
 				
@@ -340,7 +343,11 @@ function distMultiplier(iDistance) {
 	} else if (iDistance > maxDistance) {
 		return 1;
 	} else {
-		return (1/(maxDistance - minProximity)) * (iDistance - minProximity);
+		//Linear function
+		//return (1/(maxDistance - minProximity)) * (iDistance - minProximity);
+		
+		//Geometric function
+		return ((iDistance - minProximity) / (8000000 - minProximity)) ** (1 / 1.5);
 	}
 }
 
@@ -357,6 +364,9 @@ function timeMultiplier(iTime) {
 		//return (1/(maxTime - minQuickness)) * (iTime - minQuickness);
 		
 		//Geometric function
-		return ((iTime - minQuickness) / (maxTime - minQuickness)) ** (1/3);
+		//return ((iTime - minQuickness) / (maxTime - minQuickness)) ** (1/3);
+		
+		//Arctan function
+		return (1/2) * Math.atan((iTime - (maxTime + minQuickness) / 2) / (((maxTime - minQuickness) / 2) / Math.tan(1))) + 0.5;
 	}
 }
