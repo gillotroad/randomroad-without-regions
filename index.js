@@ -6,7 +6,7 @@
 
 /*
 Description:
-
+StreetView game; generates random StreetView panoramas + asks user to guess location on world map
 
 Manual:
 
